@@ -1,0 +1,13 @@
+name: sbi_env
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.10
+  - numpy
+  - matplotlib
+  - seaborn
+  - pytorch
+  - pip
+  - pip:
+      - sbi
