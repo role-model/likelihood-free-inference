@@ -4,23 +4,42 @@ __Experimenting with different likelihood-free inference methods__
 ---
 
 ## Table of Contents
+- [Project Structure](#project-structure)
 - [Goals](#goals)
 - [Parameters](#parameters)
 - [Demo](#demo)
+- [Stretch Goals](#stretch-goals)
 - [Results](#results)
 - [Conclusion](#conclusion)
 
 ---
+
+### Project Structure
+The project is organized as follows:
+
+```
+likelihood-free-inference/
+├── data/                   # Directory for storing datasets
+├── examples/               # Source code for the project
+│   ├── sbi-logs/           # Directory for machine learning models
+├── src/roler               # Source code for the project
+│   ├── models/             # Directory for machine learning models
+├── _config.yml             # Configuration for website
+├── pyproject.toml          # Configures the build system and metadata for the roler project
+├── README.md               # Project README file
+```
+
+---
 ### Goals
-The Rules of Life Engine Model is an agent-based simulation model that predicts multiple aspects of biodiversity from first principles using biological mechanisms including how organisms interact with each other to acquire resources, how they reproduce, how new species arise through speciation, and how traits of populations change through evolution. The multiple aspects of biodiversity predicted by the simulation model include the number of species (species richness), the population sizes of each species, the genetic diversity of populations (number and frequency of unique alleles), and the heterogeneity of traits.
+The __Rules of Life Engine Model__ is an agent-based simulation model that predicts multiple aspects of biodiversity from first principles using biological mechanisms including how organisms interact with each other to acquire resources, how they reproduce, how new species arise through speciation, and how traits of populations change through evolution. The multiple aspects of biodiversity predicted by the simulation model include the number of species (species richness), the population sizes of each species, the genetic diversity of populations (number and frequency of unique alleles), and the heterogeneity of traits.
 
 This simulation model has approximately 10 adjustable parameters that govern how agents (individual organisms) live, die, reproduce, and ultimately give rise to new species. Our goal is to be able to fit these parameters to real data sets.  Because the model is too complex to capture with an equation (or set of equations) we instead have to train an AI to predict parameter values from patterns in data.  This is different from a typical AI workflow which classifies data, or predicts patterns in data.  Here we train the AI not on real data, but on data simulated from our agent based model.  The AI does not predict or classify the simulated data, but rather predicts the parameters that generated the simulated data. We then confront that trained AI with real data and ask it to predict the parameter values responsible for generating those real data.
 
 We have seen moderate success using simple random forest regression.  We see a team of students to develop even better approaches using deep learning.
 
-The model is implemented in a combination of C++, R, and python.  You can view our work to date here: https://github.com/role-model/roleR
+The simulationn model is previously implemented in a combination of C++, R, and python.  You can view work to date [here](https://github.com/role-model/roleR).
 
-You can view a publication describing an earlier version of this model here: https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.13514 (open access)
+You can view a publication describing an earlier version of this model [here.](https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.13514).
 
 ---
 ### Parameters
@@ -48,16 +67,16 @@ original_param_distribution = {
 ```
 ---
 ### Demo
-_Goals for Demo_
+_Goals_
 
 - Wrapper convert R model into Python
 - Sample random parameters
 - Generate dataset
 - Train NPE using SBI
 - Hyper parameter tuning (maybe)
-- Metrics: Accuracy, AUROC
+- Determine metrics: Accuracy, AUROC
 
-_Stretch Goals_:
+### Stretch Goals:
 
 - Train different models
 - User interface
