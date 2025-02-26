@@ -63,16 +63,11 @@ from roler.model import ModelPrior, ModelParams
 
 class Simulator:    
     def simulate(self, theta: ModelParams) -> pd.DataFrame:
-        # params = self.prior.get_params_from_sample(theta)
-        # params = asdict(params)
         params = roleR.roleParams(**asdict(theta))
         model = roleR.runRole(roleR.roleModel(params))
         stats = roleR.getSumStats(model)
         
         stats_df = pandas2ri.rpy2py(stats)
-        # stats_df = stats_df[[col for col in stats_df.columns if col in self.columns]]
-        # stats_df = stats_df.dropna()
-        
         return pd.DataFrame(stats_df)       
         
     def generate_dataset(self, prior: ModelPrior, samples: int, columns: list[str], select_ratio: float = 0.5):
