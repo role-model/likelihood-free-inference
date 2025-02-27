@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "roler"
 version = "0.1.0"
+dependencies = ["torch", "numpy", "sbi", "rpy2"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
