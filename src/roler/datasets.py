@@ -11,13 +11,16 @@ class Dataset:
         self.simulator = simulator
         self.columns = columns
     
-    def generate_dataset(self, samples: int, select_ratio: float = 0.5):
+    def generate_dataset(self, samples: int, select_ratio: float = None, select_last_n: int = None):
         tensor_prior = self.prior.get_joint_uniform()
         
         x_samples_transformed = torch.tensor([])
         theta_samples_transformed = torch.tensor([])
         
-        for _ in range(samples):
+        # Keep track of timesteps per simulation for select_ratio
+        all_timesteps = []
+        
+        for i in range(samples):
             theta = tensor_prior.sample()
             params = self.prior.get_params_from_tensor(theta)
             
@@ -26,6 +29,22 @@ class Dataset:
             stats_df = stats_df.dropna()
             
             x = torch.Tensor(np.array(stats_df))
+            
+            # Track number of timesteps in this simulation
+            num_timesteps = x.shape[0]
+            all_timesteps.append(num_timesteps)
+            
+            # Apply selection logic per simulation
+            if select_ratio is not None and 0 < select_ratio <= 1:
+                # Calculate how many timesteps to keep from this simulation
+                keep_timesteps = max(1, int(num_timesteps * select_ratio))
+                # Keep only the last portion according to the ratio
+                x = x[-keep_timesteps:]
+            elif select_last_n is not None:
+                # Keep only the last n timesteps (or all if less than n)
+                x = x[-min(select_last_n, num_timesteps):]
+            
+            # Add to the collection
             x_samples_transformed = torch.cat((x_samples_transformed, x))
             theta_samples_transformed = torch.cat((theta_samples_transformed, torch.tile(theta, (x.shape[0], 1))))
 
