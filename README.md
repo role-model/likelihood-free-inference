@@ -14,6 +14,13 @@ __Experimenting with different likelihood-free inference methods__
 
 ---
 
+### Installation (Mac)
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
 ### Project Structure
 The project is organized as follows:
 
