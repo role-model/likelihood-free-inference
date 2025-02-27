@@ -61,7 +61,10 @@ import numpy as np
 from dataclasses import asdict
 from roler.model import ModelPrior, ModelParams
 
-class Simulator:    
+class Simulator:
+    def __init__(self, prior: ModelPrior = None):
+        self.prior = prior
+    
     def simulate(self, theta: ModelParams) -> pd.DataFrame:
         params = roleR.roleParams(**asdict(theta))
         model = roleR.runRole(roleR.roleModel(params))
@@ -70,22 +73,9 @@ class Simulator:
         stats_df = pandas2ri.rpy2py(stats)
         return pd.DataFrame(stats_df)       
         
-    def generate_dataset(self, prior: ModelPrior, samples: int, columns: list[str], select_ratio: float = 0.5):
-        tensor_prior = prior.get_joint_uniform()
+    def __call__(self, theta: torch.Tensor) -> torch.Tensor:
+        if self.prior is None:
+            raise ValueError("ModelPrior must be specified in Simulator constructor.")
         
-        x_samples_transformed = torch.tensor([])
-        theta_samples_transformed = torch.tensor([])
-        
-        for _ in range(samples):
-            theta = tensor_prior.sample()
-            params = prior.get_params_from_tensor(theta)
-            
-            stats_df = self.simulate(params)
-            stats_df = stats_df[[col for col in stats_df.columns if col in columns]]
-            stats_df = stats_df.dropna()
-            
-            x = torch.Tensor(np.array(stats_df))
-            x_samples_transformed = torch.cat((x_samples_transformed, x))
-            theta_samples_transformed = torch.cat((theta_samples_transformed, torch.tile(theta, (x.shape[0], 1))))
-
-        return [theta_samples_transformed, x_samples_transformed]
+        params = roleR.roleParams(**asdict(self.prior.get_params_from_tensor(theta)))
+        self.simulate(params)

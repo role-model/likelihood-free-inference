@@ -2,6 +2,7 @@ from roler.distributions import *
 
 from dataclasses import dataclass, fields
 from torch.distributions import Uniform
+from sbi.utils import BoxUniform
 import torch
 
 @dataclass
@@ -112,7 +113,7 @@ class ModelPrior:
             "Prior distributions may need adjustment to better respect constraints."
         )
     
-    def get_joint_uniform(self) -> Uniform:
+    def get_joint_uniform(self, device: str = "cpu") -> BoxUniform:
         low = []
         high = []
         for field in fields(self):
@@ -120,7 +121,7 @@ class ModelPrior:
             if isinstance(val, Distribution):
                 low.append(val.low)
                 high.append(val.high)
-        return Uniform(low=torch.tensor(low), high=torch.tensor(high))
+        return BoxUniform(low=torch.tensor(low), high=torch.tensor(high), device=device)
     
     def get_params_from_tensor(self, sample: torch.Tensor) -> ModelParams:
         sampled_params = {}
