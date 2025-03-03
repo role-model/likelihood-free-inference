@@ -75,22 +75,19 @@ original_param_distribution = {
 ---
 ### Demo
 _Goals_
-
+- Create Demo Jupyter Notebook
 - Wrapper convert R model into Python
 - Sample random parameters
-- Generate dataset
 - Train NPE using SBI
-- Hyper parameter tuning (maybe)
+
+
+_Next Steps_
+- GPU and Multi-core training
+- Generate dataset
 - Determine metrics: Accuracy, AUROC
 
 ### Stretch Goals:
 
 - Train different models
 - User interface
-- By Demo Day
-- Generate Dataset
-- Try to train a model
-- Update the website
-- Create presentation slides (if we need to)
-- Create Demo Jupyter Notebook
-- Clean up the repo
+- Hyperparameter Tuning
