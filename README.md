@@ -85,9 +85,6 @@ _Next Steps_
 - GPU and Multi-core training
 - Generate dataset
 - Determine metrics: Accuracy, AUROC
-
-### Stretch Goals:
-
 - Train different models
 - User interface
 - Hyperparameter Tuning
