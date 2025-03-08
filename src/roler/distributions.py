@@ -79,7 +79,7 @@ class IntDistribution(Distribution):
             low (int): The lower bound of the distribution.
             high (int): The upper bound of the distribution.
         """
-        super().__init__(float(low), float(high))  # Call super with floats
+        super().__init__(float(low - 0.5), float(high + 0.5))
 
     def discretize(self, n: float) -> int:
         """
