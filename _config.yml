@@ -1,6 +1,6 @@
 title: Likelihood-Free Inference
 description: Experimenting with different likelihood-free inference methods
-remote_theme: pages-themes/cayman@v0.2.0
+remote_theme: pages-themes/hacker@v0.2.0
 plugins:
 - jekyll-remote-theme
 include: ["docs"]
