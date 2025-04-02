@@ -1,0 +1,15 @@
+site_name: Likelihood-Free Inference Documentation
+# Configuration for MkDocs
+# See: https://www.mkdocs.org/user-guide/configuration/
+config:
+    # The theme to use for the documentation
+    theme: readthedocs
+    # The name of the site
+    name: Likelihood-Free Inference Documentation
+    # The description of the site
+    description: Experimenting with different likelihood-free inference methods
+site_url: https://role-model.github.io/likelihood-free-inference/
+nav:
+    - Home: index.md
+    - About: about.md
+    - Mehods:  methods.md

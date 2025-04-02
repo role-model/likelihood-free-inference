@@ -1,8 +1,3 @@
----
-layout: default
-title: About This Project
----
-
 # About the Likelihood-Free Inference Project
 
 ## Background

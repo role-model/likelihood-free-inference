@@ -1,8 +1,3 @@
----
-layout: default
-title: Likelihood-Free Inference Documentation
----
-
 # Likelihood-Free Inference Documentation
 
 This documentation site provides detailed information about the methods, implementation approaches, and research results for our experiments with likelihood-free inference techniques.
