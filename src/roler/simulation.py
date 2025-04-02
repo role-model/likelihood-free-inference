@@ -77,5 +77,5 @@ class Simulator:
         if self.prior is None:
             raise ValueError("ModelPrior must be specified in Simulator constructor.")
         
-        params = roleR.roleParams(**asdict(self.prior.get_params_from_tensor(theta)))
+        params = roleR.roleParams(**asdict(self.prior.get_params(theta)))
         self.simulate(params)
