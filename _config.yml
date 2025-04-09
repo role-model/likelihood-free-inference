@@ -1,3 +1,6 @@
-theme: jekyll-theme-hacker
 title: Likelihood-Free Inference
-description: Capstone Project Updates and Milestones
+description: Experimenting with different likelihood-free inference methods
+remote_theme: pages-themes/hacker@v0.2.0
+plugins:
+- jekyll-remote-theme
+include: ["docs"]
