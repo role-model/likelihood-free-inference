@@ -92,3 +92,97 @@ class ModelPrior(BoxUniform):
                 high.append(value.high)
 
         return torch.tensor(low), torch.tensor(high)
+
+
+class SimpleModelParams(BaseModel):
+    birth_rate: float
+    ntaxa: int
+    J: int
+    colrate: float
+    # local_stop_time: int
+    Ne_scaling: float
+    
+@dataclass
+class SimpleModelPrior(BoxUniform):
+    birth_rate: Union[float, "FloatDistribution"]
+    ntaxa: Union[int, "IntDistribution"]
+    J: Union[int, "IntDistribution"]
+    colrate: Union[float, "FloatDistribution"]
+    # local_stop_time: Union[int, "IntDistribution"]
+    Ne_scaling: Union[float, "FloatDistribution"]
+
+    def __post_init__(self):
+        """Initializes the BoxUniform parent class with low/high bounds."""
+        low, high = self._get_low_high_tensors()
+        # Ensure tensors are created correctly even if there are no distributions
+        if not low and not high:
+             # Handle case where all parameters are fixed (no distributions)
+             # BoxUniform needs non-empty tensors, create dummy ones
+             # Or raise an error, depending on expected SBI behavior for fixed params
+             # For now, creating dummy tensors of shape (0,)
+             low_tensor = torch.empty((0,), dtype=torch.float32)
+             high_tensor = torch.empty((0,), dtype=torch.float32)
+             # Note: SBI might require at least one parameter to vary.
+             # If using SBI, ensure at least one field uses a Distribution.
+        else:
+            low_tensor = torch.tensor(low, dtype=torch.float32)
+            high_tensor = torch.tensor(high, dtype=torch.float32)
+
+        super().__init__(low=low_tensor, high=high_tensor)
+
+    def get_params(self, sample: torch.Tensor) -> SimpleModelParams:
+        """
+        Generates a SimpleModelParams instance from a sampled tensor.
+
+        Args:
+            sample: A tensor sampled from the prior distribution (e.g., by SBI).
+                    Expected shape is (num_varying_params,).
+
+        Returns:
+            An instance of SimpleModelParams with values filled according
+            to the sample and the prior definitions.
+        """
+        sample_list = sample.tolist()
+        params = OrderedDict()
+        param_index = 0
+
+        for field_obj in fields(self):
+            field_name = field_obj.name
+            prior_value = getattr(self, field_name)
+
+            if isinstance(prior_value, Distribution):
+                # Check if we have enough sample values
+                if param_index >= len(sample_list):
+                    raise IndexError(
+                        f"Sample tensor has too few elements. Trying to access index {param_index} "
+                        f"for parameter '{field_name}', but sample length is {len(sample_list)}."
+                    )
+                # Get value from sample and discretize using the distribution
+                params[field_name] = prior_value.discretize(sample_list[param_index])
+                param_index += 1
+            else:
+                # Use the fixed value provided in the prior definition
+                params[field_name] = prior_value
+
+        # Ensure all sampled values were used (optional check)
+        if param_index != len(sample_list):
+             print(f"Warning: Sample tensor length ({len(sample_list)}) does not match "
+                   f"the number of varying parameters ({param_index}). Extra sample values ignored.")
+
+        # Create and return the SimpleModelParams instance
+        return SimpleModelParams(**params)
+
+    def _get_low_high_tensors(self) -> tuple[list, list]:
+        """Extracts low and high bounds from Distribution fields."""
+        low = []
+        high = []
+
+        for field_obj in fields(self):
+            value = getattr(self, field_obj.name)
+            # Check specifically for types inheriting from Distribution
+            # or adjust based on your actual Distribution base class/types
+            if isinstance(value, (IntDistribution, FloatDistribution)): # Adapt if using a common base class 'Distribution'
+                low.append(value.low)
+                high.append(value.high)
+
+        return low, high
