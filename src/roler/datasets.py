@@ -1,108 +1,59 @@
-import torch
-from roler.model import ModelPrior, ModelParams
 from roler.simulation import Simulator
-import numpy as np
+from typing import TypedDict
+import pandas as pd
 from joblib import Parallel, delayed
+import warnings
 
-DEFAULT_COLUMNS = [
-    "richness",
-    "hill_abund_1",
-    "hill_abund_2",
-    "hill_abund_3",
-    "hill_abund_4",
-    "hill_trait_1",
-    "hill_trait_2",
-    "hill_trait_3",
-    "hill_trait_4",
-]
+class Dataset(TypedDict):
+    params: pd.DataFrame
+    output: pd.DataFrame
 
-
-class Dataset:
-    def __init__(
-        self,
-        simulator: Simulator,
-        prior: ModelPrior,
-        columns: list[str] = DEFAULT_COLUMNS,
-    ):
-        self.prior = prior
+class DatasetGenerator:
+    def __init__(self, simulator: Simulator):
         self.simulator = simulator
-        self.columns = columns
 
-    def generate_dataset(
-        self,
-        samples: int,
-        select_ratio: float = None,
-        select_last_n: int = None,
-        n_jobs: int = 1,
-    ):
+    def _safe_simulate(self, theta):
+        try:
+            # call your simulator (via __call__ or direct)
+            return self.simulator(theta)
+        except Exception as e:
+            warnings.warn(f"Simulation failed for params {theta}: {e}", RuntimeWarning)
+            return None
+
+    def generate_dataset(self, samples: int, n_jobs: int = 1) -> Dataset:
         """
-        Generates a dataset by running simulations in parallel.
-
-        Parameters:
-            samples (int): Number of simulations to run.
-            select_ratio (float, optional): If provided (and between 0 and 1),
-                only keep the last portion (given by the ratio) of timesteps.
-            select_last_n (int, optional): If provided, keep only the last n timesteps.
-            n_jobs (int): Number of parallel jobs to run.
-
-        Returns:
-            list: [theta_samples_transformed, x_samples_transformed] where
-                - theta_samples_transformed is a tensor of repeated parameter samples,
-                - x_samples_transformed is a tensor of simulation outputs.
+        Generate a dataset of parameters and simulation outputs using joblib for parallelism.
+        Any simulation that raises an exception will be skipped.
         """
-        # Get the joint uniform distribution prior.
-        tensor_prior = self.prior.get_joint_uniform()
+        if self.simulator.prior is None:
+            raise ValueError("Simulator has no prior for sampling.")
 
-        def simulate_one_sample(_):
-            # Sample a parameter vector theta.
-            theta = tensor_prior.sample()
-            # Convert theta from the tensor into parameters format.
-            params = self.prior.get_params_from_tensor(theta)
+        # 1) Sample parameter objects
+        param_objs = [self.simulator.prior.sample() for _ in range(samples)]
 
-            # Pass theta as an argument to simulate, as it is required.
-            stats_df = self.simulator.simulate(params)
-            # Filter the DataFrame to keep only the desired columns.
-            stats_df = stats_df[[col for col in stats_df.columns if col in self.columns]]
-            stats_df = stats_df.dropna()
-
-            # Convert simulation data to a torch Tensor.
-            x = torch.Tensor(np.array(stats_df))
-            num_timesteps = x.shape[0]
-
-            # Apply selection logic per simulation.
-            if select_ratio is not None and 0 < select_ratio <= 1:
-                keep_timesteps = max(1, int(num_timesteps * select_ratio))
-                x = x[-keep_timesteps:]
-            elif select_last_n is not None:
-                x = x[-min(select_last_n, num_timesteps) :]
-
-            # Repeat theta for each timestep in this simulation.
-            theta_tile = torch.tile(theta, (x.shape[0], 1))
-            return theta_tile, x
-
-        # Run simulations in parallel.
-        results = Parallel(n_jobs=n_jobs)(
-            delayed(simulate_one_sample)(i) for i in range(samples)
-        )
-
-        # Collect and concatenate the results.
-        theta_samples_transformed = []
-        x_samples_transformed = []
-        for theta_sample, x_sample in results:
-            theta_samples_transformed.append(theta_sample)
-            x_samples_transformed.append(x_sample)
-
-        if theta_samples_transformed:
-            theta_samples_transformed = torch.cat(theta_samples_transformed, dim=0)
+        # 2) Run simulations (safely) in parallel or serial
+        if n_jobs == 1:
+            outputs = [self._safe_simulate(theta) for theta in param_objs]
         else:
-            theta_samples_transformed = torch.tensor([])
+            outputs = Parallel(
+                n_jobs=n_jobs, verbose=10, batch_size=5
+            )(delayed(self._safe_simulate)(theta) for theta in param_objs)
 
-        if x_samples_transformed:
-            x_samples_transformed = torch.cat(x_samples_transformed, dim=0)
-        else:
-            x_samples_transformed = torch.tensor([])
+        # 3) Pair params with their outputs, drop failures
+        successes = [
+            (theta, out)
+            for theta, out in zip(param_objs, outputs)
+            if out is not None
+        ]
 
-        return [theta_samples_transformed, x_samples_transformed]
+        if not successes:
+            # if everything failed, return empty DataFrames
+            return {"params": pd.DataFrame(), "output": pd.DataFrame()}
 
-    def get_params_from_tensor(self, sample: torch.Tensor) -> ModelParams:
-        return self.prior.get_params_from_tensor(sample)
+        # 4) Build params DataFrame from only the successful thetas
+        params_df = pd.DataFrame([theta.numpy() for theta, _ in successes])
+
+        # 5) Concatenate only the successful outputs
+        output_df = pd.concat([out for _, out in successes], ignore_index=True)
+
+        return {"params": params_df, "output": output_df}
