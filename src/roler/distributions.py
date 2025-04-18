@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 from typing import Any, List
 import random
 from pydantic import BaseModel
+from dataclasses import dataclass
 
+@dataclass
 class Distribution(ABC):
     low: float
     high: float

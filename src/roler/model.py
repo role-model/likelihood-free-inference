@@ -4,63 +4,68 @@ import torch
 from typing import Union
 from collections import OrderedDict
 from sbi.utils import BoxUniform
-import math
-# from pydantic.dataclasses import dataclass
 from pydantic import BaseModel
+from typing import TypedDict    
 
 class ModelParams(BaseModel):
-    individuals_local: int
-    individuals_meta: int
-    species_meta: int
-    speciation_local: float
-    speciation_meta: float
-    extinction_meta: float
-    env_sigma: float
-    trait_sigma: float
-    comp_sigma: float
-    dispersal_prob: float
-    mutation_rate: float
-    equilib_escape: float
-    num_basepairs: int
+    individuals_local: int = 10000
+    individuals_meta: int = 1000000
+    species_meta: int = 500
+    speciation_local: float = 0.00001
+    speciation_meta: float = 1.0
+    extinction_meta: float = 0.8
+    env_sigma: float = 0.0
+    trait_sigma: float = 1.0
+    comp_sigma: float = 0
+    dispersal_prob: float = 0.01
+    mutation_rate: float = 0.0
+    equilib_escape: float = 0.0
+    num_basepairs: int = 500
     
-    alpha: float  # New parameter
-    neut_delta: float  # New parameter
-    env_comp_delta: float  # New parameter
+    alpha: float = 1.0
+    neut_delta: float = 1.0
+    env_comp_delta: float = 0.5
     
-    init_type: str
-    niter: int
-    niterTimestep: int
+    init_type: str = "oceanic_island"
+    niter: int = 500000
+    niterTimestep: int = 500000
 
 @dataclass
 class ModelPrior(BoxUniform):
-    individuals_local: Union[int, "IntDistribution"]
-    add_individuals_meta: Union[int, "IntDistribution"]
+    individuals_local: Union[int, "IntDistribution"] = 10000
+    add_individuals_meta: Union[int, "IntDistribution"] = 100000
     
-    prop_species_meta: Union[float, "FloatDistribution"]
-    speciation_local: Union[float, "FloatDistribution"]
-    speciation_meta: Union[float, "FloatDistribution"]
+    species_meta: Union[int, "IntDistribution"] = 500
+    speciation_local: Union[float, "FloatDistribution"] = 0.00001
+    speciation_meta: Union[float, "FloatDistribution"] = 1.0
     
-    extinction_meta: Union[float, "FloatDistribution"]
-    env_sigma: Union[float, "FloatDistribution"]
-    trait_sigma: Union[float, "FloatDistribution"]
-    comp_sigma: Union[float, "FloatDistribution"]
-    dispersal_prob: Union[float, "FloatDistribution"]
-    mutation_rate: Union[float, "FloatDistribution"]
-    equilib_escape: Union[float, "FloatDistribution"]
-    num_basepairs: Union[int, "IntDistribution"]
+    extinction_meta: Union[float, "FloatDistribution"] = 0.8
+    env_sigma: Union[float, "FloatDistribution"] = 0.0
+    trait_sigma: Union[float, "FloatDistribution"] = 1.0
+    comp_sigma: Union[float, "FloatDistribution"] = 0
+    dispersal_prob: Union[float, "FloatDistribution"] = 0.01
+    mutation_rate: Union[float, "FloatDistribution"] = 0.0
+    equilib_escape: Union[float, "FloatDistribution"] = 0.0
+    num_basepairs: Union[int, "IntDistribution"] = 500
     
-    alpha: Union[float, "FloatDistribution"]  # New parameter
-    neut_delta: Union[float, "FloatDistribution"]  # New parameter
-    env_comp_delta: Union[float, "FloatDistribution"]  # New parameter
+    alpha: Union[float, "FloatDistribution"] = 1.0  # New parameter
+    neut_delta: Union[float, "FloatDistribution"] = 1.0  # New parameter
+    env_comp_delta: Union[float, "FloatDistribution"] = 0.5  # New parameter
     
-    init_type: Union[str, "ChoiceDistribution"]
-    niter: Union[int, "IntDistribution"]
-    niterTimestep: Union[int, "IntDistribution"]
+    init_type: Union[str, "ChoiceDistribution"] = "oceanic_island"
+    niter: Union[int, "IntDistribution"] = 500000
+    niterTimestep: Union[int, "IntDistribution"] = 500000
     
     def __post_init__(self):
-        low, high = self._get_low_high_tensors()
-        super().__init__(low=low, high=high)
+        self.low, self.high = self._get_low_high_tensors()
+        super().__init__(low=self.low, high=self.high)
 
+    def get_uniform(self, device: str) -> BoxUniform:
+        low = self.low.clone().to(device)
+        high = self.high.clone().to(device)
+
+        return BoxUniform(low=low, high=high)
+    
     def get_params(self, sample: torch.Tensor) -> ModelParams:
         sample = sample.tolist()
         params = OrderedDict()
@@ -76,8 +81,8 @@ class ModelPrior(BoxUniform):
                 
         params["individuals_meta"] = params["individuals_local"] + params["add_individuals_meta"]
         del params["add_individuals_meta"]
-        params["species_meta"] = math.ceil(params["individuals_meta"] * params["prop_species_meta"])
-        del params["prop_species_meta"]
+        # params["species_meta"] = math.ceil(params["individuals_meta"] * params["prop_species_meta"])
+        # del params["prop_species_meta"]
         
         return ModelParams(**params)
     
