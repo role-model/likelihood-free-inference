@@ -1,0 +1,8 @@
+{
+  "label": "SBI Pipeline",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Core steps of the simulation-based inference pipeline, including priors, simulators, and posteriors."
+  }
+}

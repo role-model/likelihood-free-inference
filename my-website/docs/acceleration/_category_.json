@@ -1,0 +1,8 @@
+{
+  "label": "GPU Acceleration",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "Guidance on using CUDA-enabled devices for simulation-based inference."
+  }
+}
