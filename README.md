@@ -30,7 +30,8 @@ pip install -e .
 ```
 
 ---
+**Project Sponsor**: Andrew Rominger, PhD
+
 
 **Authors**: Micah Tilton & Frances Uy
-**Project Sponsor**: Andrew Rominger, PhD
 
