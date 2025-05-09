@@ -31,9 +31,6 @@ pip install -e .
 
 ---
 
-## Authors
-
-- Frances Uy
-- Micah Tilton
-Sponsor: Dr. Andrew Rominger
+**Authors**: Micah Tilton & Frances Uy
+**Project Sponsor**: Andrew Rominger, PhD
 
