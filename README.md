@@ -6,6 +6,8 @@ Developed as part of an undergraduate capstone project (ICS 496 at University of
 
 ---
 
+Documentation Site: https://role-model.github.io/likelihood-free-inference/ 
+
 ## Features
 
 - Agent-based simulation model for biodiversity
